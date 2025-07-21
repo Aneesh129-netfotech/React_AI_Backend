@@ -1,0 +1,29 @@
+{
+  "name": "backend_recruiterai",
+  "version": "1.0.0",
+  "description": "This is the backend file of ai recruiter platform where we can higher people.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "Aditya",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.10.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.3",
+    "multer": "^2.0.1",
+    "nodemailer": "^7.0.5",
+    "openai": "^5.9.2",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
