@@ -4,6 +4,7 @@ import session from 'express-session';
 import mongoose from 'mongoose';
 import recruiterRoutes from "./Routes/recruiterRoutes.js";
 import JDrouter from "./Routes/JdRoutes.js"
+import adminRoutes from "./Routes/AdminRoutes.js"
 
 
 const app = express();
@@ -27,7 +28,8 @@ app.use(
 
 app.use(express.json());
 
-app.use('/api/recruiters', recruiterRoutes);
+app.use('/api/recruiter', recruiterRoutes);
 app.use('/api/jd', JDrouter);
+app.use("/api/admin", adminRoutes);
 
 export default app;
