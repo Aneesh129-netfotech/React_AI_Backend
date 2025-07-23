@@ -193,3 +193,41 @@ export const getRecruiterData = async (req, res) => {
 
 }
 
+export const updateRecruiter = async (req, res) => {
+    const { name, email, companyName, companyWebsite, number, designation, industry, linkedInProfile } = req.body;
+    try {
+        const recruiter = await Recruiter.findById(req.user.id);
+
+        if (!recruiter) {
+            return res.status(404).json({ message: "Recruiter not found" });
+        }
+
+        if (name) recruiter.name = name;
+        if (email) recruiter.email = email;
+        if (companyName) recruiter.companyName = companyName;
+        if (companyWebsite) recruiter.companyWebsite = companyWebsite;
+        if (number) recruiter.number = number;
+        if (designation) recruiter.designation = designation;
+        if (industry) recruiter.industry = industry;
+        if (linkedInProfile) recruiter.linkedInProfile = linkedInProfile;
+
+        const updatedRecruiter = await recruiter.save();
+
+        res.status(200).json({
+            messsage: "Recruiter updated successfully",
+            recruiter: {
+                name: updatedRecruiter.name,
+                email: updatedRecruiter.email,
+                companyName: updatedRecruiter.companyName,
+                companyWebsite: updatedRecruiter.companyWebsite,
+                number: updatedRecruiter.number,
+                designation: updatedRecruiter.designation,
+                industry: updatedRecruiter.industry,
+                linkedInProfile: updatedRecruiter.linkedInProfile
+            }
+        })
+    } catch (error) {
+        res.status(500).json({ message: " Error Updating recruiter" })
+    }
+}
+

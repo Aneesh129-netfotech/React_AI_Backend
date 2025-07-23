@@ -8,7 +8,8 @@ import {
     forgotPassword,
     verifyForgotPasswordOTP,
     resetPassword,
-    getRecruiterData
+    getRecruiterData,
+    updateRecruiter
 } from '../Controllers/RecruiterController.js';
 import protect from '../Middlewares/authMiddleware.js';
 
@@ -23,5 +24,6 @@ recruiterRoutes.post("/verify-otp", verifyForgotPasswordOTP);
 recruiterRoutes.post("/reset-password", resetPassword);
 
 recruiterRoutes.get("/getRecruiterData", protect, getRecruiterData)
+recruiterRoutes.put("/update" , protect, updateRecruiter)
 
 export default recruiterRoutes;
