@@ -180,11 +180,10 @@ ${salaryRange ? `- Salary Range: ${salaryRange}` : ""}
 Include:
 1. Company Overview
 2. Job Summary
-3. Key Responsibilities
-4. Required Skills
-5. Preferred Skills
-6. Perks & Benefits
-7. How to Apply (Email: ${recruiterEmail})
+3. Required Skills
+4. Preferred Skills
+5. Perks & Benefits
+6. How to Apply (Email: ${recruiterEmail})
  
 Use markdown formatting and bullet points .
 `;
@@ -203,11 +202,11 @@ Only return the summary — no heading or bullet points.
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
  
-    // 1. Generate full JD
+    
     const jdResult = await model.generateContent(jdPrompt);
     const jdText = jdResult.response.text();
  
-    // 2. Generate clean summary
+    
     const summaryResult = await model.generateContent(summaryPrompt);
     const jobSummary = summaryResult.response.text().trim();
  
@@ -221,7 +220,7 @@ Only return the summary — no heading or bullet points.
       employmentType,
       salaryRange,
       fullJD: jdText,
-      jobSummary // ✅ Clean summary for question generation
+      jobSummary 
     });
  
     res.status(201).json({
@@ -457,7 +456,7 @@ export const uploadJDPfd = async (req, res) => {
     const pdfBuffer = fs.readFileSync(filePath);
     const pdfText = (await pdfParse(pdfBuffer)).text;
  
-    // Delete file after parsing
+    
     fs.unlinkSync(filePath);
  
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
@@ -486,7 +485,7 @@ Return in JSON format only (no explanation) with keys:
  
     let structuredData;
 try {
-  // Remove markdown formatting if Gemini includes ```json ... ```
+  
   const cleanedJson = extractedText
     .replace(/```json/i, "")
     .replace(/```/g, "")
@@ -513,7 +512,7 @@ if (!req.user || !req.user.email || !req.user._id) {
  
 const recruiterEmail = req.user.email;
  
-    // Step 2: Generate full formatted JD
+    
     const jdPrompt = `
 Write a professional job description using the following:
  
@@ -540,7 +539,7 @@ Use markdown formatting and bullet points.
     const jdResult = await model.generateContent(jdPrompt);
     const fullJD = jdResult.response.text();
  
-    // Step 3: Generate a summary
+  
     const summaryPrompt = `
 Summarize the following job requirements in 3-5 lines. Only include Job Title, Required Experience, and Skills.
 Do not include company name, location, salary, employment type, or any other information.
@@ -555,7 +554,7 @@ Only return the summary — no heading or bullet points.
     const summaryResult = await model.generateContent(summaryPrompt);
     const jobSummary = summaryResult.response.text().trim();
  
-    // Step 4: Save to DB
+    
     const newJD = await JD.create({
       recruiter: req.user._id,
       title,
@@ -580,3 +579,22 @@ Only return the summary — no heading or bullet points.
   }
 };
 
+export const getallJDs = async (req, res) => {
+  try {
+    const jds = await JD.find({ recruiter: req.user._id }).populate('recruiter', 'name email');
+    res.status(200).json({
+      // fullJd:jds.fullJD,
+      jds: jds.map(jd => ({
+        _id: jd._id,
+        title: jd.title,
+        jobSummary: jd.jobSummary,
+        fullJD: jd.fullJD,
+        createdAt: jd.createdAt
+      }))
+
+    });
+  } catch (error) {
+    console.error("Error fetching JDs:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+}
