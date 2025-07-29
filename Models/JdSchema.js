@@ -1,25 +1,25 @@
 import mongoose from "mongoose";
 
-const FilteredResumeSchema= new mongoose.Schema({
+const resumeSchema= new mongoose.Schema({
     fileName: String,
     matchSummary: String,
-    summary:String,
-    date:{
-        type: Date, default:Date.now
-    }
+    matchPercentage: Number,
+    resumeMatch: String
 })
 
 const jdSchema = new mongoose.Schema({
     recruiter: {type: mongoose.Schema.Types.ObjectId, ref: 'Recruiter',required: true},
     title: String,
-    experience : Number,
+    experience : String,
     skills: [String],
     location: String,
-    company: String,
+    Qualification: String,
     employmentType: String,
     salaryRange: String,
     fullJD: String,
-    FilteredResumeSchema: [FilteredResumeSchema],
+    jobSummary: String,
+    filteredResumes: [resumeSchema],
+    unfilteredResumes: [resumeSchema],
     createdAt:{
         type: Date,
         default: Date.now
