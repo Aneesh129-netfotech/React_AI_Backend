@@ -1,6 +1,7 @@
 import Admin from '../Models/AdminSchema.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import Recruiter from '../Models/Recruiter.js'
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' })
@@ -58,6 +59,16 @@ export const loginAdmin = async (req, res) => {
     catch (error) {
         console.error("Error logging in admin:", error);
         res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+export const getAllRecruiters = async (req, res) => {
+    try {
+        const recruiters = await Recruiter.find().select("-password");
+        res.status(200).json({ message: "All recruiters fetched successfully", recruiters })
+    } catch (error) {
+        console.log("Error fetching recruiters", error)
+        res.status(500).json({ message: "Failed to fetch Recruiters", error: error.message })
     }
 }
 
