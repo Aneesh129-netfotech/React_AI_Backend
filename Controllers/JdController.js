@@ -527,11 +527,10 @@ ${salaryRange ? `- Salary Range: ${salaryRange}` : ""}
 Include:
 1. Company Overview
 2. Job Summary
-3. Key Responsibilities
-4. Required Skills
-5. Preferred Skills
-6. Perks & Benefits
-7. How to Apply (Email: ${recruiterEmail})
+3. Required Skills
+4. Preferred Skills
+5. Perks & Benefits
+6. How to Apply (Email: ${recruiterEmail})
  
 Use markdown formatting and bullet points.
     `;
@@ -596,5 +595,28 @@ export const getallJDs = async (req, res) => {
   } catch (error) {
     console.error("Error fetching JDs:", error);
     res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+export const getJDById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const jd = await JD.findById(id).populate('recruiter', 'name email');
+    if (!jd) {
+      return res.status(404).json({ message: "JD not found" });
+    }
+    res.status(200).json({
+      _id: jd._id,
+      title: jd.title,
+      jobSummary: jd.jobSummary,
+      createdAt: jd.createdAt,
+      recruiter: {
+        name: jd.recruiter.name,
+        email: jd.recruiter.email
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching JD:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 }

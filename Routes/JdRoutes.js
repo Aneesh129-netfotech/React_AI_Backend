@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
-import {generateJD,filterJD,deleteJd,generateQuestionsFromJD,uploadJDPfd,getallJDs} from "../Controllers/JdController.js";
+import {generateJD,filterJD,deleteJd,generateQuestionsFromJD,uploadJDPfd,getallJDs,getJDById} from "../Controllers/JdController.js";
 import protect from '../Middlewares/authMiddleware.js';
 import JD from '../Models/JdSchema.js';
 const JDrouter = express.Router();
@@ -13,4 +13,5 @@ JDrouter.post('/generate-questions',protect, generateQuestionsFromJD);
 JDrouter.delete('/delete/:id', protect, deleteJd);
 JDrouter.post('/upload-pdf',protect, upload.single('jdPdf'), uploadJDPfd);
 JDrouter.get('/get-all', protect, getallJDs);
+JDrouter.get('/get-jd-summary/:id', protect, getJDById);
 export default JDrouter;    
