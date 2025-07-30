@@ -578,25 +578,30 @@ Only return the summary — no heading or bullet points.
   }
 };
 
+// export const getallJDs = async (req, res) => {
+//   try {
+//     const jds = await JD.find({ recruiter: req.user._id }).populate('recruiter', 'name email');
+//     res.status(200).json
+//   } catch (error) {
+//     console.error("Error fetching JDs:", error);
+//     res.status(500).json({ message: "Internal server error." });
+//   }
+// }
 export const getallJDs = async (req, res) => {
   try {
-    const jds = await JD.find({ recruiter: req.user._id }).populate('recruiter', 'name email');
+    const jds = await JD.find({ recruiter: req.user._id })
+      .populate('recruiter', 'name email')
+      .sort({ createdAt: -1 }); // Sort by creation date, newest first
     res.status(200).json({
-      // fullJd:jds.fullJD,
-      jds: jds.map(jd => ({
-        _id: jd._id,
-        title: jd.title,
-        jobSummary: jd.jobSummary,
-        fullJD: jd.fullJD,
-        createdAt: jd.createdAt
-      }))
-
+      message: "All JDs fetched successfully",
+      jds
     });
   } catch (error) {
     console.error("Error fetching JDs:", error);
-    res.status(500).json({ message: "Internal server error." });
+    res.status(500).json({ message: "Internal server error" });
   }
 }
+
 
 export const getJDById = async (req, res) => {
   const { id } = req.params;
