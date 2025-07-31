@@ -2,6 +2,7 @@ import Admin from '../Models/AdminSchema.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Recruiter from '../Models/Recruiter.js'
+import JD from '../Models/JdSchema.js';
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' })
@@ -69,6 +70,26 @@ export const getAllRecruiters = async (req, res) => {
     } catch (error) {
         console.log("Error fetching recruiters", error)
         res.status(500).json({ message: "Failed to fetch Recruiters", error: error.message })
+    }
+}
+
+export const getAllJD = async(req, res) => {
+    try {
+        const Jd = await JD.find().populate('recruiter', 'name');
+        res.status(200).json({ message: "All JD fetched successfully" , Jd})
+    } catch (error) {
+        console.log("Error fetching JD", error);
+        res.status(500).json({ message: "Failed to fetch JD", error: error.message })
+    }
+}
+
+export const getJobById = async(req, res) => {
+    try{
+        const id = req.params.id;
+        const job = await JD.findById(id).populate("recruiter", "name");
+        res.status(200).json({ message: "Successfully Fetched Job" , job});
+    }catch(error) {
+        res.status(500).json({ message: "Failed to fetch Job" , error: error.message })
     }
 }
 
