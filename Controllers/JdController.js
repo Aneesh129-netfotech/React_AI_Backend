@@ -396,7 +396,7 @@ ${pdfText}
       const match = matchSummary.match(/(\d+)%/);
       const matchPercentage = match ? parseInt(match[1]) : 0;
  
-      const { name, email } = extractCandidateDetails(pdfText);
+      const { name, email, skills, experience } = extractCandidateDetails(pdfText);
  
       const resumeData = {
         fileName: file.originalname,
@@ -404,6 +404,8 @@ ${pdfText}
         matchPercentage,
         name: name || "Unknown",
         email: email || "Not found",
+        skills:skills,
+        experience:experience,
         resumeText: pdfText,
       };
  
@@ -411,6 +413,8 @@ ${pdfText}
         await Candidate.create({
           name,
           email,
+          skills,
+          experience,
           score: matchPercentage,
           jdId,
           testSent: false, // only storing, not sending test yet

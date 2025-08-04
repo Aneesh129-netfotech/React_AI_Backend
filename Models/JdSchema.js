@@ -4,7 +4,11 @@ const resumeSchema= new mongoose.Schema({
     fileName: String,
     matchSummary: String,
     matchPercentage: Number,
-    resumeMatch: String
+    resumeMatch: String,
+    name: String,
+    email: String,
+    skills: [{type:String}],
+    experience:String
 })
 
 const jdSchema = new mongoose.Schema({
