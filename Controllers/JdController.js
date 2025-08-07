@@ -770,6 +770,40 @@ export const getAllFilteredResumes = async (req, res) => {
   }
 };
 
+export const getFilteredResumesByJD = async (req, res) => {
+  try {
+    const { jdId } = req.params;
+ 
+    if (!jdId) {
+      return res.status(400).json({ error: "JD ID is required." });
+    }
+ 
+    const jd = await JD.findById(jdId);
+ 
+    if (!jd) {
+      return res.status(404).json({ error: "JD not found." });
+    }
+ 
+    const selectedFields = jd.filteredResumes.map(resume => ({
+name: resume.name || "Unknown",
+email: resume.email || "Not found",
+      skills: resume.skills || [],
+      fileName: resume.fileName || "N/A",
+      matchSummary: resume.matchSummary || "No summary",
+      matchPercentage: resume.matchPercentage || 0,
+    }));
+ 
+    res.status(200).json({
+      jdId,
+      count: selectedFields.length,
+      filteredResumes: selectedFields,
+    });
+ 
+  } catch (error) {
+    console.error("Error in getFilteredResumesByJD:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 
 

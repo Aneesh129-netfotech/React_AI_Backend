@@ -10,7 +10,7 @@ import {
   uploadJDPfd,
   getallJDs,
   getJDById,
-  getAllFilteredResumes,
+  getAllFilteredResumes,getFilteredResumesByJD
 
 } from "../Controllers/JdController.js";
 import protect from "../Middlewares/authMiddleware.js";
@@ -27,5 +27,6 @@ JDrouter.post("/upload-pdf", protect, upload.single("jdPdf"), uploadJDPfd);
 JDrouter.get("/get-all", protect, getallJDs);
 JDrouter.get("/get-jd-summary/:id", protect, getJDById);
 JDrouter.get("/get-all-filter-resumes/:jdId", protect, getAllFilteredResumes);
+JDrouter.get("/filtered-resumes/:jdId", protect, getAllFilteredResumes);
 
 export default JDrouter;
