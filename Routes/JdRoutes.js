@@ -25,7 +25,7 @@ JDrouter.post("/generate-questions", protect, generateQuestionsFromJD);
 JDrouter.delete("/delete/:id", protect, deleteJd);
 JDrouter.post("/upload-pdf", protect, upload.single("jdPdf"), uploadJDPfd);
 JDrouter.get("/get-all", protect, getallJDs);
-JDrouter.get("/get-jd-summary/:id", protect, getJDById);
+JDrouter.get("/get-jd-summary/:id", getJDById);
 JDrouter.get("/get-all-filter-resumes/:jdId", protect, getAllFilteredResumes);
 JDrouter.get("/filtered-resumes/:jdId", protect, getAllFilteredResumes);
 
