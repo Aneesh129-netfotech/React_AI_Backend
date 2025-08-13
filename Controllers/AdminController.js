@@ -2,6 +2,7 @@ import Admin from '../Models/AdminSchema.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Recruiter from '../Models/Recruiter.js'
+import Candidate from '../Models/Candidate.js'
 import JD from '../Models/JdSchema.js';
 
 const generateToken = (id) => {
@@ -73,23 +74,63 @@ export const getAllRecruiters = async (req, res) => {
     }
 }
 
-export const getAllJD = async(req, res) => {
+export const getAllApplicants = async (req, res) => {
+    try {
+        const Candidates = await Candidate.find().select("-password");
+        res.status(200).json({ message: "All Candidates fetched successfully", Candidates })
+    } catch (error) {
+        console.log("Error fetching Candidates", error)
+        res.status(500).json({ message: "Failed to fetch Candidates", error: error.message })
+    }
+}
+
+export const deleteRecruiter = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const recruiter = await Recruiter.findById(id);
+        if (!recruiter) {
+            return res.status(404).json({ message: "recruiter not found" });
+        }
+        await Recruiter.findByIdAndDelete(id);
+        res.status(200).json({ message: "recruiter deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting recruiter:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+export const deleteApplicant = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const candidate = await Candidate.findById(id);
+        if (!candidate) {
+            return res.status(404).json({ message: "candidate not found" });
+        }
+        await Candidate.findByIdAndDelete(id);
+        res.status(200).json({ message: "candidate deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting candidate:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+export const getAllJD = async (req, res) => {
     try {
         const Jd = await JD.find().populate('recruiter', 'name');
-        res.status(200).json({ message: "All JD fetched successfully" , Jd})
+        res.status(200).json({ message: "All JD fetched successfully", Jd })
     } catch (error) {
         console.log("Error fetching JD", error);
         res.status(500).json({ message: "Failed to fetch JD", error: error.message })
     }
 }
 
-export const getJobById = async(req, res) => {
-    try{
+export const getJobById = async (req, res) => {
+    try {
         const id = req.params.id;
         const job = await JD.findById(id).populate("recruiter", "name");
-        res.status(200).json({ message: "Successfully Fetched Job" , job});
-    }catch(error) {
-        res.status(500).json({ message: "Failed to fetch Job" , error: error.message })
+        res.status(200).json({ message: "Successfully Fetched Job", job });
+    } catch (error) {
+        res.status(500).json({ message: "Failed to fetch Job", error: error.message })
     }
 }
 
