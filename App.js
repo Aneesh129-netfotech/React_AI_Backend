@@ -11,7 +11,7 @@ import messageRoutes from "./Routes/MessageRoutes.js"
 const app = express();
 app.use(
   cors({
-    origin: "http://localhost:5175", // Allow only your frontend URL 5175 for currect development server
+    origin: "http://localhost:5173", // Allow only your frontend URL 5175 for currect development server
     credentials: true, // Allow cookies and authentication headers
     methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allow these headers
