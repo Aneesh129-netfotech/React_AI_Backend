@@ -830,3 +830,76 @@ export const getAllJdByRecruiter = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+export const getAllRecentFilteredResumes = async (req, res) => {
+  try {
+    const jds = await JD.find({ recruiter: req.user._id })
+      .populate("recruiter", "name email")
+      .sort({ createdAt: -1 });
+
+      const allResumes = jds.flatMap(jd => jd.filteredResumes.map(resume => ({
+        ...resume.toObject(),
+        jdId: jd._id,
+        jdTitle: jd.title || "untitled jd"
+      })));
+    const recentFilteredResumes = allResumes
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5);
+    res.status(200).json({
+      message: "All recent filtered resumes fetched successfully",
+      recentFilteredResumes: recentFilteredResumes.map(resume => ({
+        _id: resume._id,
+        name: resume.name || "Unknown",
+        email: resume.email || "Not found",
+        jdId: resume.jdId || "Not found",
+        jdTitle: resume.jdTitle || "Not found",
+      }))
+    });
+  } catch (error) {
+    console.error("Error fetching recent filtered resumes:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+export const getFilteredCandidateByEmail = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    if (!email) {
+      return res.status(400).json({ message: "Email is required." });
+    }
+    const jds = await JD.find({ "filteredResumes.email": email });
+    
+    const filteredResumesHard = jds.flatMap(jd =>
+      jd.filteredResumes.filter(resume => resume.email === email)
+    );
+
+    if (filteredResumesHard.length === 0) {
+      return res.status(404).json({ message: "No resumes found for the given email." ,
+         filteredResumes: filteredResumesHard.map(resume => ({
+        _id: resume._id,
+        name: resume.name || "Unknown",
+        email: resume.email || "Not found",
+       
+      }))
+      });
+    }
+
+    res.status(200).json({
+      message: "Email found successfully!",
+      filteredResumes: filteredResumesHard.map(resume => ({
+        _id: resume._id,
+        name: resume.name || "Unknown",
+        email: resume.email || "Not found",
+       
+      }))
+     
+      
+    });
+  } catch (error) {
+    console.error("Error fetching filtered resumes:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
