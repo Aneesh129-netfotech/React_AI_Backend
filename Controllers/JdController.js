@@ -903,3 +903,63 @@ export const getFilteredCandidateByEmail = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getRecentFiveJdAndItsFilteredResumesAndUnfilteredResumesCount = async (req, res) => {
+  try {
+    const jds = await JD.find({ recruiter: req.user._id })
+    
+    
+      .populate("recruiter", "name email")
+      .sort({ createdAt: -1 })
+      .limit(5);
+    const result = await Promise.all(jds.map(async (jd) => {
+      const filteredCount = jd.filteredResumes.length;
+      const unfilteredCount = jd.unfilteredResumes.length;
+      return {
+        jdId: jd._id,
+        jdTitle: jd.title,
+        filteredResumesCount: filteredCount,
+        unfilteredResumesCount: unfilteredCount,
+      };
+    }));
+
+    res.status(200).json({
+      message: "Recent 5 JDs and their resumes count fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error fetching recent JDs and resumes count:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getCountOfTotalJdsAndTotalResumes = async (req, res) => {
+  try {
+    const totalJds = await JD.countDocuments({ recruiter: req.user._id });
+    const totalFilteredApplicants = await JD.aggregate([
+      { $match: { recruiter: req.user._id } },
+      { $unwind: "$filteredResumes" },
+      { $group: { _id: null, count: { $sum: 1 } } }
+    ]);
+    const totalUnfilteredApplicants = await JD.aggregate([
+      { $match: { recruiter: req.user._id } },
+      { $unwind: "$unfilteredResumes" },
+      { $group: { _id: null, count: { $sum: 1 } } }
+    ]);
+
+    const totalApplicants = totalFilteredApplicants[0]?.count + totalUnfilteredApplicants[0]?.count;
+
+    res.status(200).json({
+      message: "Total JDs and applicants count fetched successfully",
+      data: {
+        totalJds,
+        // totalFilteredApplicants: totalFilteredApplicants[0]?.count || 0,
+        // totalUnfilteredApplicants: totalUnfilteredApplicants[0]?.count || 0,
+        totalApplicants
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching total JDs and applicants count:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
