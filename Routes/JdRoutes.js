@@ -15,7 +15,8 @@ import {
   getAllRecentFilteredResumes,
   getFilteredCandidateByEmail,
   getRecentFiveJdAndItsFilteredResumesAndUnfilteredResumesCount,
-  getCountOfTotalJdsAndTotalResumes
+  getCountOfTotalJdsAndTotalResumes,
+  updateJd
 
 } from "../Controllers/JdController.js";
 import protect from "../Middlewares/authMiddleware.js";
@@ -38,5 +39,6 @@ JDrouter.get("/get-all-recent-filtered", protect, getAllRecentFilteredResumes );
 JDrouter.post("/get-filteredCandidateByEmail",  getFilteredCandidateByEmail );
 JDrouter.get("/get-recentJds",protect,  getRecentFiveJdAndItsFilteredResumesAndUnfilteredResumesCount );
 JDrouter.get("/get-count",protect, getCountOfTotalJdsAndTotalResumes);
+JDrouter.put("/update/:id",protect, updateJd);
 
 export default JDrouter;
