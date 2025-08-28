@@ -487,7 +487,6 @@ Format the questions in a numbered list and give me in formet manner`;
 //   }
 // };
 
-
 export const filterJD = async (req, res) => {
   try {
     const { jdId, jdText } = req.body;
@@ -511,43 +510,43 @@ export const filterJD = async (req, res) => {
       const pdfBuffer = fs.readFileSync(filePath);
       const pdfText = (await pdfParse(pdfBuffer)).text;
 
-//       const prompt = `
-// Compare the following resume with this job description. Give:
-// 1. A match percentage (out of 100)
-// 2. Key matching skills
-// 3. Whether the candidate is a good fit (Yes/No)
+      const prompt = `
+Compare the following resume with this job description. Give:
+1. A match percentage (out of 100)
+2. Key matching skills
+3. Whether the candidate is a good fit (Yes/No)
  
-// ### Job Description:
-// ${jdText}
- 
-// ### Resume:
-// ${pdfText}
-//       `;
-const prompt = `
-You are a resume filtering assistant. Compare this resume against the job description and provide:
- 
-1. Match percentage (0-100)
-2. Brief reason for the score
-3. Whether candidate qualifies (Good Fit: Yes/No)
- 
-FILTERING RULES:
-- 60%+= Good candidate (gets filtered in)
-- Pls select the candidate if 60% skills match with JD
--Focus on required experience
-- Consider education requirements
-- Be concise in explanation
- 
-Job Description:
+### Job Description:
 ${jdText}
  
-Resume:
+### Resume:
 ${pdfText}
- 
-Format your response as:
-Match: [X]%
-Reason: [Brief explanation but in bullet points]
-Good Fit: [Yes/No]
       `;
+// const prompt = `
+// You are a resume filtering assistant. Compare this resume against the job description and provide:
+ 
+// 1. Match percentage (0-100)
+// 2. Brief reason for the score
+// 3. Whether candidate qualifies (Good Fit: Yes/No)
+ 
+// FILTERING RULES:
+// - 60%+= Good candidate (gets filtered in)
+// - Pls select the candidate if 60% skills match with JD
+// -Focus on required experience
+// - Consider education requirements
+// - Be concise in explanation
+ 
+// Job Description:
+// ${jdText}
+ 
+// Resume:
+// ${pdfText}
+ 
+// Format your response as:
+// Match: [X]%
+// Reason: [Brief explanation but in bullet points]
+// Good Fit: [Yes/No]
+//       `;
 
       const result = await model.generateContent(prompt);
       const matchSummary =
@@ -727,7 +726,6 @@ Good Fit: [Yes/No]
 //     res.status(500).json({ error: "Internal Server Error" });
 //   }
 // };
-
 
 export const getResumesByJdId = async (req, res) => {
   const { jdId } = req.params;
@@ -982,7 +980,6 @@ email: resume.email || "Not found",
   }
 };
 
-
 export const getAllJdByRecruiter = async (req, res) => {
   try {
     const jds = await JD.find({ recruiter: req.user._id })
@@ -1006,7 +1003,6 @@ export const getAllJdByRecruiter = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 export const getAllRecentFilteredResumes = async (req, res) => {
   try {
@@ -1037,7 +1033,6 @@ export const getAllRecentFilteredResumes = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 export const getFilteredCandidateByEmail = async (req, res) => {
   const { email } = req.body;
@@ -1139,3 +1134,4 @@ export const getCountOfTotalJdsAndTotalResumes = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
