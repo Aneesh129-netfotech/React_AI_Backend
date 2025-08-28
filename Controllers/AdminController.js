@@ -78,12 +78,29 @@ export const getAllApplicants = async (req, res) => {
     try {
         const Candidates = await Candidate.find().select("-password");
         res.status(200).json({ message: "All Candidates fetched successfully", Candidates })
+        const count = await Candidate.countDocuments();
+        console.log("Total number of candidates:", count);
     } catch (error) {
         console.log("Error fetching Candidates", error)
         res.status(500).json({ message: "Failed to fetch Candidates", error: error.message })
     }
 }
+export const getAlldata = async(req,res)=>{
+    try{
 
+        const recruites= await Recruiter.find().select("-password");
+        const candidates= await Candidate.find().select("-password");
+        const jd= await JD.find().populate('recruiter', 'name');
+        const Candidate_count = await Candidate.countDocuments();
+        const Recruiter_count = await Recruiter.countDocuments();
+        const countJd = await JD.countDocuments();
+        res.status(200).json({message:"All data fetched successfully",Candidate_count,Recruiter_count,countJd})
+    }
+    catch(error){
+        console.log("Error fetching data", error)
+        res.status(500).json({ message: "Failed to fetch data", error: error.message })
+    }
+}
 export const deleteRecruiter = async (req, res) => {
     const { id } = req.params;
     try {

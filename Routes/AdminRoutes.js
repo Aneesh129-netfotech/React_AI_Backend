@@ -1,5 +1,5 @@
 import express from "express";
-import { deleteApplicant, deleteRecruiter, getAllApplicants, getAllJD, getAllRecruiters, getJobById, loginAdmin, registerAdmin } from "../Controllers/AdminController.js";
+import { deleteApplicant, deleteRecruiter, getAllApplicants, getAllJD, getAllRecruiters, getJobById, loginAdmin, registerAdmin,getAlldata } from "../Controllers/AdminController.js";
 
 
 
@@ -9,6 +9,7 @@ router.post("/register", registerAdmin);
 router.post("/login", loginAdmin);
 router.get("/getAllRecruiters", getAllRecruiters);
 router.get("/getAllApplicants", getAllApplicants);
+router.get("/getAlldata", getAlldata);
 router.delete("/deleteRecruiter/:id", deleteRecruiter);
 router.delete("/deleteApplicant/:id", deleteApplicant);
 router.get("/getAllJD", getAllJD);
