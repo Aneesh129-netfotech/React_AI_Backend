@@ -1,4 +1,4 @@
-export const extractCandidateDetails = (resumeText) => {
+ const extractCandidateDetails = (resumeText) => {
   const lines = resumeText.split('\n').map(line => line.trim()).filter(Boolean);
  
   // Extract email
@@ -54,3 +54,5 @@ export const extractCandidateDetails = (resumeText) => {
  
   return { name, email, skills, experience };
 };
+
+export default extractCandidateDetails;
