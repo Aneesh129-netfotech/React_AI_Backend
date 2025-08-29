@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import pdfParse from "pdf-parse";
-import { extractCandidateDetails } from "../Utils/extractCandidateDetails.js";
+import {extractCandidateDetails} from "../Utils/extractCandidateDetails.js"
 import Candidate from "../Models/Candidate.js";
 import axios from "axios";
 dotenv.config();
