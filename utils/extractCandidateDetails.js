@@ -54,3 +54,4 @@ export const extractCandidateDetails = (resumeText) => {
  
   return { name, email, skills, experience };
 };
+
