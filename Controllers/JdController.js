@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import pdfParse from "pdf-parse";
-import {extractCandidateDetails} from "../utils/extractCandidateDetails.js";
+import {extractCandidateDetails} from "../Utils/extractCandidateDetails.js";
 import Candidate from "../Models/Candidate.js";
 import axios from "axios";
 dotenv.config();
@@ -491,27 +491,32 @@ export const filterJD = async (req, res) => {
   try {
     const { jdId, jdText } = req.body;
     const files = req.files;
-
+ 
     if (!jdId || !jdText) {
       return res.status(400).json({ error: "jdId and jdText are required." });
     }
-
+ 
     if (!files || files.length === 0) {
       return res.status(400).json({ error: "No resumes uploaded." });
     }
-
+ 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
+ 
     const filteredResults = [];
     const unfilteredResults = [];
-
+ 
+    // 🔹 Fetch JD once (to check duplicates in filtered resumes)
+    const jd = await JD.findById(jdId);
+    if (!jd) return res.status(404).json({ error: "JD not found." });
+ 
     for (const file of files) {
       const filePath = file.path;
       const pdfBuffer = fs.readFileSync(filePath);
       const pdfText = (await pdfParse(pdfBuffer)).text;
-
+ 
       const prompt = `
 Compare the following resume with this job description. Give:
+ 
 1. A match percentage (out of 100)
 2. Key matching skills
 3. Whether the candidate is a good fit (Yes/No)
@@ -522,79 +527,58 @@ ${jdText}
 ### Resume:
 ${pdfText}
       `;
-// const prompt = `
-// You are a resume filtering assistant. Compare this resume against the job description and provide:
  
-// 1. Match percentage (0-100)
-// 2. Brief reason for the score
-// 3. Whether candidate qualifies (Good Fit: Yes/No)
- 
-// FILTERING RULES:
-// - 60%+= Good candidate (gets filtered in)
-// - Pls select the candidate if 60% skills match with JD
-// -Focus on required experience
-// - Consider education requirements
-// - Be concise in explanation
- 
-// Job Description:
-// ${jdText}
- 
-// Resume:
-// ${pdfText}
- 
-// Format your response as:
-// Match: [X]%
-// Reason: [Brief explanation but in bullet points]
-// Good Fit: [Yes/No]
-//       `;
-
       const result = await model.generateContent(prompt);
       const matchSummary =
         result.response.candidates?.[0]?.content?.parts?.[0]?.text ||
         "No summary available";
+ 
       const match = matchSummary.match(/(\d+)%/);
       const matchPercentage = match ? parseInt(match[1]) : 0;
-
-      const { name, email, skills, experience } =
-        extractCandidateDetails(pdfText);
-
+ 
+      const { name, email, skills, experience } = extractCandidateDetails(pdfText);
+ 
       const resumeData = {
         fileName: file.originalname,
         matchSummary,
         matchPercentage,
         name: name || "Unknown",
         email: email || "Not found",
-        skills: skills,
-        experience: experience,
+        skills,
+        experience,
         resumeText: pdfText,
       };
-
+ 
+      // ✅ Only check duplicates in FILTERED resumes for this JD
       if (matchPercentage >= 60 && email) {
-        await Candidate.create({
-          name,
-          email,
-          skills,
-          experience,
-          score: matchPercentage,
-          jdId,
-          testSent: false, // only storing, not sending test yet
-        });
-
-        filteredResults.push(resumeData);
+const alreadyFiltered = jd.filteredResumes.some((r) => r.email === email);
+ 
+        if (!alreadyFiltered) {
+          await Candidate.create({
+            name,
+            email,
+            skills,
+            experience,
+            score: matchPercentage,
+            jdId,
+            testSent: false,
+          });
+ 
+          filteredResults.push(resumeData);
+          jd.filteredResumes.push(resumeData); // add to JD
+        } else {
+          console.log(`⏭ Skipped duplicate filtered resume: ${email}`);
+        }
       } else {
         unfilteredResults.push(resumeData);
+        jd.unfilteredResumes.push(resumeData); // always save unfiltered
       }
-
+ 
       fs.unlinkSync(filePath); // delete uploaded file after processing
     }
-
-    const jd = await JD.findById(jdId);
-    if (!jd) return res.status(404).json({ error: "JD not found." });
-
-    jd.filteredResumes = jd.filteredResumes.concat(filteredResults);
-    jd.unfilteredResumes = jd.unfilteredResumes.concat(unfilteredResults);
+ 
     await jd.save();
-
+ 
     res.status(200).json({
       message: "Resumes filtered and candidates stored.",
       savedFiltered: filteredResults.length,
@@ -1135,3 +1119,34 @@ export const getCountOfTotalJdsAndTotalResumes = async (req, res) => {
   }
 };
 
+export const getFilteredCandidateByEmailAccordingToTheJD = async (req, res) => {
+  const { email, jdId } = req.body;
+
+  try {
+    if (!email || !jdId) {
+      return res.status(400).json({ message: "Email and JD ID are required." });
+    }
+
+    const jd = await JD.findById(jdId);
+    if (!jd) {
+      return res.status(404).json({ message: "Job description not found." });
+    }
+
+    const filteredResumes = jd.filteredResumes.filter(resume => resume.email === email);
+    if (filteredResumes.length === 0) {
+      return res.status(404).json({ message: "No resumes found for the given email in this JD." });
+    }
+
+    res.status(200).json({
+      message: "Filtered resumes found successfully!",
+      filteredResumes: filteredResumes.map(resume => ({
+        _id: resume._id,
+        name: resume.name || "Unknown",
+        email: resume.email || "Not found",
+      }))
+    });
+  } catch (error) {
+    console.error("Error fetching filtered resumes:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
