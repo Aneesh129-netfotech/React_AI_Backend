@@ -1018,46 +1018,46 @@ export const getAllRecentFilteredResumes = async (req, res) => {
   }
 };
 
-export const getFilteredCandidateByEmail = async (req, res) => {
-  const { email } = req.body;
+// export const getFilteredCandidateByEmail = async (req, res) => {
+//   const { email } = req.body;
 
-  try {
-    if (!email) {
-      return res.status(400).json({ message: "Email is required." });
-    }
-    const jds = await JD.find({ "filteredResumes.email": email });
+//   try {
+//     if (!email) {
+//       return res.status(400).json({ message: "Email is required." });
+//     }
+//     const jds = await JD.find({ "filteredResumes.email": email });
     
-    const filteredResumesHard = jds.flatMap(jd =>
-      jd.filteredResumes.filter(resume => resume.email === email)
-    );
+//     const filteredResumesHard = jds.flatMap(jd =>
+//       jd.filteredResumes.filter(resume => resume.email === email)
+//     );
 
-    if (filteredResumesHard.length === 0) {
-      return res.status(404).json({ message: "No resumes found for the given email." ,
-         filteredResumes: filteredResumesHard.map(resume => ({
-        _id: resume._id,
-        name: resume.name || "Unknown",
-        email: resume.email || "Not found",
+//     if (filteredResumesHard.length === 0) {
+//       return res.status(404).json({ message: "No resumes found for the given email." ,
+//          filteredResumes: filteredResumesHard.map(resume => ({
+//         _id: resume._id,
+//         name: resume.name || "Unknown",
+//         email: resume.email || "Not found",
        
-      }))
-      });
-    }
+//       }))
+//       });
+//     }
 
-    res.status(200).json({
-      message: "Email found successfully!",
-      filteredResumes: filteredResumesHard.map(resume => ({
-        _id: resume._id,
-        name: resume.name || "Unknown",
-        email: resume.email || "Not found",
+//     res.status(200).json({
+//       message: "Email found successfully!",
+//       filteredResumes: filteredResumesHard.map(resume => ({
+//         _id: resume._id,
+//         name: resume.name || "Unknown",
+//         email: resume.email || "Not found",
        
-      }))
+//       }))
      
       
-    });
-  } catch (error) {
-    console.error("Error fetching filtered resumes:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+//     });
+//   } catch (error) {
+//     console.error("Error fetching filtered resumes:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 export const getRecentFiveJdAndItsFilteredResumesAndUnfilteredResumesCount = async (req, res) => {
   try {
@@ -1119,7 +1119,7 @@ export const getCountOfTotalJdsAndTotalResumes = async (req, res) => {
   }
 };
 
-export const getFilteredCandidateByEmailAccordingToTheJD = async (req, res) => {
+export const getFilteredCandidateByEmail = async (req, res) => {
   const { email, jdId } = req.body;
 
   try {
