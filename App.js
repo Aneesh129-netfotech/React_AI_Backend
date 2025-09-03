@@ -6,6 +6,7 @@ import recruiterRoutes from "./Routes/recruiterRoutes.js";
 import JDrouter from "./Routes/JdRoutes.js"
 import adminRoutes from "./Routes/AdminRoutes.js";
 import messageRoutes from "./Routes/MessageRoutes.js"
+import candidateRoutes from "./Routes/CandidateRoute.js"
 
 
 const app = express();
@@ -29,6 +30,7 @@ app.use(
 
 app.use(express.json());
 
+app.use('/api/candidate', candidateRoutes);
 app.use('/api/recruiter', recruiterRoutes);
 app.use('/api/jd', JDrouter);
 app.use("/api/admin", adminRoutes);
