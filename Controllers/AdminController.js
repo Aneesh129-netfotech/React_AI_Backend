@@ -85,6 +85,7 @@ export const getAllApplicants = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch Candidates", error: error.message })
     }
 }
+
 export const getAlldata = async(req,res)=>{
     try{
 
@@ -133,13 +134,28 @@ export const deleteApplicant = async (req, res) => {
 
 export const getAllJD = async (req, res) => {
     try {
-        const Jd = await JD.find().populate('recruiter', 'name');
+        const Jd = await JD.find().select('_id title skills fullJD company location');
         res.status(200).json({ message: "All JD fetched successfully", Jd })
     } catch (error) {
         console.log("Error fetching JD", error);
         res.status(500).json({ message: "Failed to fetch JD", error: error.message })
     }
 }
+
+// export const getAllsJD = async(req,res)=>{
+//     try{
+//         const jd= await JD.find().populate('fullJD');
+//         jd.map((item) => {
+//            item.skills = item.skills || "No skills available";
+//         });
+//         res.status(200).json({message:"All JD fetched successfully",item})
+//     }
+//     catch(error){
+//         console.log("Error fetching JD", error);
+//         res.status(500).json({ message: "Failed to fetch JD", error: error.message })
+//     }
+// }
+
 
 export const getJobById = async (req, res) => {
     try {
