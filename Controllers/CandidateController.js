@@ -4,6 +4,7 @@ import { cloudinary } from "../config/cloudinary.js";
 import fs from "fs";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import JD from "../Models/JdSchema.js";
 // mport { cloudinary } from "../../config/cloudinary.js";
 
 
@@ -204,6 +205,25 @@ export const applyToSpecificJD = async (req, res) => {
         });
     } catch (error) {
         console.error("Error applying to job:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const changeStatusOfAllFileredCandidate = async (req, res) => {
+    const { jobId } = req.params;
+    const { status } = req.body;
+    try {
+        const updatedCandidates = await JD.updateMany(
+            { _id: jobId },
+            { $set: { "filteredResumes.$[].status": status } },
+            { new: true }
+        );
+        res.status(200).json({
+            message: "Status updated successfully",
+            updatedCandidates
+        });
+    } catch (error) {
+        console.error("Error updating status:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
