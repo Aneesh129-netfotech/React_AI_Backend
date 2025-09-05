@@ -8,7 +8,16 @@ const resumeSchema= new mongoose.Schema({
     name: String,
     email: String,
     skills: [{type:String}],
-    experience:String
+    experience:String,
+    status:{
+        enum:["Pending","Shortlisted","Rejected","Selected"],
+        type: String,
+        default:"Pending",
+        appliedAt:{
+            type: Date,
+            default: Date.now
+        }
+    }
 })
 
 const jdSchema = new mongoose.Schema({

@@ -38,11 +38,6 @@ const candidateAdditionSchema = new mongoose.Schema({
     linkedInProfile: {
         type: String,
     },
-    status:{
-        enum:["Pending","Resume Shortlisted","Rejected","Selected"],
-        type: String,
-        default:"Pending"
-    }
 }, { timestamps: true });
 
 const CandidateAddition = mongoose.model("CandidateAddition", candidateAdditionSchema);
