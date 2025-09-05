@@ -17,9 +17,8 @@ const candidateAdditionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    skills:{
-        type: String,
-    },
+    skills:[{type:String}],
+    
     currentCTC:{
         type: String,
     },
