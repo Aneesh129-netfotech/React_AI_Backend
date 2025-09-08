@@ -2,19 +2,9 @@ import mongoose from "mongoose";
 
 const candidateAdditionSchema = new mongoose.Schema({
 
-      candidateId: {
+ candidateId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "CandidateRegister",
-        required: true
-    },
-    jobId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "JD", // or whatever your Job model is called
-        required: true
-    },
-   
-    resume: {
-        type: String,
         required: true
     },
     skills:[{type:String}],
