@@ -16,7 +16,9 @@ import {
   getFilteredCandidateByEmail,
   getRecentFiveJdAndItsFilteredResumesAndUnfilteredResumesCount,
   getCountOfTotalJdsAndTotalResumes,
-  updateJd
+  updateJd,
+  getAllCandidatesdataAccordingToJD,
+  filterCloudinaryJD
 
 } from "../Controllers/JdController.js";
 import protect from "../Middlewares/authMiddleware.js";
@@ -26,6 +28,7 @@ const upload = multer({ dest: "uploads/" });
 
 JDrouter.post("/generate", protect, generateJD);
 JDrouter.post("/filter", upload.array("resumes", 20), protect, filterJD);
+JDrouter.post("/filter-cloudinary", upload.array("resumes"), protect, filterCloudinaryJD);
 JDrouter.get("/resumes/:jdId", protect, getResumesByJdId);
 JDrouter.post("/generate-questions", protect, generateQuestionsFromJD);
 JDrouter.delete("/delete/:id", protect, deleteJd);
@@ -40,5 +43,7 @@ JDrouter.post("/get-filteredCandidateByEmail",  getFilteredCandidateByEmail );
 JDrouter.get("/get-recentJds",protect,  getRecentFiveJdAndItsFilteredResumesAndUnfilteredResumesCount );
 JDrouter.get("/get-count",protect, getCountOfTotalJdsAndTotalResumes);
 JDrouter.put("/update/:id",protect, updateJd);
+// JDrouter.get("/getFilteredResumesByJD/:jdId",protect, getFilteredResumesByJD);
+JDrouter.get("/getAllCandidatesdataAccordingToJD/:jobId", getAllCandidatesdataAccordingToJD);
 
 export default JDrouter;
