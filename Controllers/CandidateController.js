@@ -83,29 +83,34 @@ export const loginCandidate = async (req, res) => {
 
 
 export const addCandidateDetails = async(req,res) => {
-try {
-    const {candidateId, skills, currentCTC, expectedCTC, currentLocation, relocation, noticePeriod} = req.body;
+    try {
+        const candidateId = req.user.id; 
+        const { skills, currentCTC, expectedCTC, currentLocation, relocation, noticePeriod } = req.body;
 
-    const existingDetails = await CandidateAddition.findOne({candidateId});
-    if(existingDetails){
-        return res.status(400).json({message:"Additional details already exist for this candidate"});
+        const existingDetails = await CandidateAddition.findOne({ candidateId });
+        if(existingDetails){
+            return res.status(400).json({ message: "Additional details already exist for this candidate" });
+        }
+
+        const candidateAddition = new CandidateAddition({
+            candidateId,
+            skills,
+            currentCTC,
+            expectedCTC,
+            currentLocation,
+            relocation,
+            noticePeriod,
+        });
+
+        await candidateAddition.save();
+        await CandidateRegister.findByIdAndUpdate(candidateId, { candidateAdditiondetails: candidateAddition._id });
+
+        res.status(201).json({ message: "Candidate Additional Details Saved Successfully", data: candidateAddition });
+    } catch (error) {
+        res.status(500).json({ message: "Error saving additional details", error: error.message });
     }
-    const candidateAddition = new CandidateAddition({
-        candidateId,
-        skills,
-        currentCTC,
-        expectedCTC,
-        currentLocation,
-        relocation,
-        noticePeriod,
-    });
-    await candidateAddition.save();
-    await CandidateRegister.findByIdAndUpdate(candidateId,{candidateAdditiondetails:candidateAddition._id});
-    res.status(201).json({message:"Candidate Additional Details Saved Successsfully",data: candidateAddition});
-} catch (error) {
-    res.status(500).json({message:"Error saving additional details",error:error.message});
-}
 };
+
 
 
 export const getCandidateProfile = async(req,res) => {

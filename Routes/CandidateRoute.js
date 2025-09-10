@@ -10,8 +10,8 @@ const router = express.Router();
 router.post("/register-candidate", registerCandidate)
 router.post("/login-candidate", loginCandidate)
 router.post('/jobs/:jobId/apply', protect, authorize('candidate'), upload.single('resume'), applyToSpecificJD);
-router.post('/add-additionalDetails',addCandidateDetails);
-router.get('/getcandidate-profile',protect, authorize('candidate'),getCandidateProfile)
+router.post('/add-additionalDetails',protect,addCandidateDetails);
+router.get('/getcandidate-profile',protect,authorize('candidate'),getCandidateProfile)
 router.get('/get-all-candidates/:jobId', getAllCandidatesdataAccordingToJD);
 router.get('/get-all-applied-jobs',protect,authorize('candidate'),getAllAppliedJobs);
 router.put('/update-candidate-additional-details/:candidateId',updateCandidateAdditionalDetails)
