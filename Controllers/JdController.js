@@ -739,126 +739,6 @@ export const getResumesByJdId = async (req, res) => {
   }
 };
 
-export const filterCloudinaryJD = async (req, res) => {
-  try {
-    const { jdId, jdText } = req.body;
-
-    if (!jdId || !jdText) {
-      return res.status(400).json({ error: "jdId and jdText are required." });
-    }
-
-    const jd = await JD.findById(jdId).populate("applications.candidate");
-    if (!jd) return res.status(404).json({ error: "JD not found." });
-
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-    // 🔍 Get resumes from JD applications instead of CandidateAddition
-    const resumes = jd.applications;
-
-    const filteredResults = [];
-    const unfilteredResults = [];
-
-    for (const application of resumes) {
-      const resumeUrl = application.resume;
-      const fileName = resumeUrl.split("/").pop().split("?")[0];
-
-      try {
-        // 🔽 Download resume from Cloudinary
-        const response = await axios.get(resumeUrl, {
-          responseType: "arraybuffer",
-        });
-        const pdfBuffer = Buffer.from(response.data, "binary");
-
-        // 🧠 Extract text from PDF
-        const pdfText = (await pdfParse(pdfBuffer)).text;
-
-        // 🧠 Prompt Gemini
-        const prompt = `
-Compare the following resume with this job description. Give:
- 
-1. A match percentage (out of 100)
-2. Key matching skills
-3. Whether the candidate is a good fit (Yes/No)
- 
-### Job Description:
-${jdText}
- 
-### Resume:
-${pdfText}
-        `;
-
-        const result = await model.generateContent(prompt);
-        const matchSummary =
-          result.response.candidates?.[0]?.content?.parts?.[0]?.text ||
-          "No summary available";
-
-        const match = matchSummary.match(/(\d+)%/);
-        const matchPercentage = match ? parseInt(match[1]) : 0;
-
-        // ✂️ Extract candidate details
-        const { name, email, skills, experience } =
-          extractCandidateDetails(pdfText);
-
-        const resumeData = {
-          fileName,
-          matchSummary,
-          matchPercentage,
-          name: name || "Unknown",
-          email: email || "Not found",
-          skills,
-          experience,
-          resumeText: pdfText,
-        };
-
-        // ✅ Store to filtered if score >= 60 and not duplicate
-        if (matchPercentage >= 60 && email) {
-          const isDuplicate = jd.filteredResumes.some((r) => r.email === email);
-
-          if (!isDuplicate) {
-            // Store candidate summary (optional)
-            await Candidate.create({
-              name,
-              email,
-              skills,
-              experience,
-              score: matchPercentage,
-              jdId,
-              testSent: false,
-            });
-
-            filteredResults.push(resumeData);
-            jd.filteredResumes.push(resumeData);
-          } else {
-            console.log(`⏭ Skipped duplicate filtered resume: ${email}`);
-          }
-        } else {
-          unfilteredResults.push(resumeData);
-          jd.unfilteredResumes.push(resumeData);
-        }
-      } catch (err) {
-        console.warn(
-          `⚠️ Failed to process resume from ${resumeUrl}:`,
-          err.message
-        );
-        continue;
-      }
-    }
-
-    await jd.save();
-
-    res.status(200).json({
-      message: "Resumes filtered and candidates stored.",
-      savedFiltered: filteredResults.length,
-      savedUnfiltered: unfilteredResults.length,
-      filtered: filteredResults,
-      unfiltered: unfilteredResults,
-    });
-  } catch (error) {
-    console.error("❌ Error in filterJD:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
 // export const filterCloudinaryJD = async (req, res) => {
 //   try {
 //     const { jdId, jdText } = req.body;
@@ -867,25 +747,27 @@ ${pdfText}
 //       return res.status(400).json({ error: "jdId and jdText are required." });
 //     }
 
-//     const jd = await JD.findById(jdId);
+//     const jd = await JD.findById(jdId).populate("applications.candidate");
 //     if (!jd) return res.status(404).json({ error: "JD not found." });
 
 //     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-//     // 🔍 Get resumes for the JD
-//     const resumes = await CandidateAddition.find({ jobId: jdId });
+//     // 🔍 Get resumes from JD applications instead of CandidateAddition
+//     const resumes = jd.applications;
 
 //     const filteredResults = [];
 //     const unfilteredResults = [];
 
-//     for (const resumeEntry of resumes) {
-//       const resumeUrl = resumeEntry.resume;
-//       const fileName = resumeUrl.split('/').pop().split('?')[0];
+//     for (const application of resumes) {
+//       const resumeUrl = application.resume;
+//       const fileName = resumeUrl.split("/").pop().split("?")[0];
 
 //       try {
 //         // 🔽 Download resume from Cloudinary
-//         const response = await axios.get(resumeUrl, { responseType: 'arraybuffer' });
-//         const pdfBuffer = Buffer.from(response.data, 'binary');
+//         const response = await axios.get(resumeUrl, {
+//           responseType: "arraybuffer",
+//         });
+//         const pdfBuffer = Buffer.from(response.data, "binary");
 
 //         // 🧠 Extract text from PDF
 //         const pdfText = (await pdfParse(pdfBuffer)).text;
@@ -893,14 +775,14 @@ ${pdfText}
 //         // 🧠 Prompt Gemini
 //         const prompt = `
 // Compare the following resume with this job description. Give:
-
+ 
 // 1. A match percentage (out of 100)
 // 2. Key matching skills
 // 3. Whether the candidate is a good fit (Yes/No)
-
+ 
 // ### Job Description:
 // ${jdText}
-
+ 
 // ### Resume:
 // ${pdfText}
 //         `;
@@ -914,7 +796,8 @@ ${pdfText}
 //         const matchPercentage = match ? parseInt(match[1]) : 0;
 
 //         // ✂️ Extract candidate details
-//         const { name, email, skills, experience } = extractCandidateDetails(pdfText);
+//         const { name, email, skills, experience } =
+//           extractCandidateDetails(pdfText);
 
 //         const resumeData = {
 //           fileName,
@@ -929,9 +812,10 @@ ${pdfText}
 
 //         // ✅ Store to filtered if score >= 60 and not duplicate
 //         if (matchPercentage >= 60 && email) {
-//           const isDuplicate = jd.filteredResumes.some(r => r.email === email);
+//           const isDuplicate = jd.filteredResumes.some((r) => r.email === email);
 
 //           if (!isDuplicate) {
+//             // Store candidate summary (optional)
 //             await Candidate.create({
 //               name,
 //               email,
@@ -944,7 +828,8 @@ ${pdfText}
 
 //             filteredResults.push(resumeData);
 //             jd.filteredResumes.push(resumeData);
-//           } else {
+//           }
+//           else {
 //             console.log(`⏭ Skipped duplicate filtered resume: ${email}`);
 //           }
 //         } else {
@@ -952,7 +837,10 @@ ${pdfText}
 //           jd.unfilteredResumes.push(resumeData);
 //         }
 //       } catch (err) {
-//         console.warn(`⚠️ Failed to process resume from ${resumeUrl}:`, err.message);
+//         console.warn(
+//           `⚠️ Failed to process resume from ${resumeUrl}:`,
+//           err.message
+//         );
 //         continue;
 //       }
 //     }
@@ -966,12 +854,141 @@ ${pdfText}
 //       filtered: filteredResults,
 //       unfiltered: unfilteredResults,
 //     });
-
 //   } catch (error) {
 //     console.error("❌ Error in filterJD:", error);
 //     res.status(500).json({ error: "Internal Server Error" });
 //   }
 // };
+
+export const filterCloudinaryJD = async (req, res) => {
+  try {
+    const { jdId, jdText } = req.body;
+ 
+    if (!jdId || !jdText) {
+      return res.status(400).json({ error: "jdId and jdText are required." });
+    }
+ 
+    const jd = await JD.findById(jdId).populate("applications.candidate");
+    if (!jd) return res.status(404).json({ error: "JD not found." });
+ 
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+ 
+    const filteredResults = [];
+    const unfilteredResults = [];
+    let shortlistedCount = 0;
+    let rejectedCount = 0;
+ 
+    // 🔍 Loop through JD applications instead of CandidateAddition
+    for (const app of jd.applications) {
+      try {
+        const resumeUrl = app.resume;
+        const fileName = resumeUrl.split("/").pop().split("?")[0];
+ 
+        // 🔽 Download resume
+        const response = await axios.get(resumeUrl, { responseType: "arraybuffer" });
+        const pdfBuffer = Buffer.from(response.data, "binary");
+ 
+        // 🧠 Extract text
+        const pdfText = (await pdfParse(pdfBuffer)).text;
+ 
+        // 🧠 Prompt Gemini
+        const prompt = `
+Compare the following resume with this job description. Give:
+1. A match percentage (out of 100)
+2. Key matching skills
+3. Whether the candidate is a good fit (Yes/No)
+ 
+### Job Description:
+${jdText}
+ 
+### Resume:
+${pdfText}
+        `;
+ 
+        const result = await model.generateContent(prompt);
+        const matchSummary =
+          result.response.candidates?.[0]?.content?.parts?.[0]?.text ||
+          "No summary available";
+ 
+        const match = matchSummary.match(/(\d+)%/);
+        const matchPercentage = match ? parseInt(match[1]) : 0;
+ 
+        // ✂️ Extract candidate details
+        const { name, email, skills, experience } = extractCandidateDetails(pdfText);
+ 
+        const resumeData = {
+          fileName,
+          matchSummary,
+          matchPercentage,
+          name: name || "Unknown",
+          email: email || "Not found",
+          skills,
+          experience,
+          resumeText: pdfText,
+        };
+ 
+        // ✅ If score >= 60 → shortlisted
+        if (matchPercentage >= 60 && email) {
+const isDuplicate = jd.filteredResumes.some((r) => r.email === email);
+ 
+          if (!isDuplicate) {
+            await Candidate.create({
+              name,
+              email,
+              skills,
+              experience,
+              score: matchPercentage,
+              jdId,
+              testSent: false,
+            });
+ 
+            jd.filteredResumes.push(resumeData);
+            filteredResults.push(resumeData);
+          }
+ 
+          if (app.status === "pending") {
+            app.status = "shortlisted";
+            shortlistedCount++;
+          }
+        } else {
+          // ❌ Else → rejected
+          jd.unfilteredResumes.push(resumeData);
+          unfilteredResults.push(resumeData);
+ 
+          if (app.status === "pending") {
+            app.status = "rejected";
+            rejectedCount++;
+          }
+        }
+      } catch (err) {
+        console.warn(`⚠️ Failed to process resume for candidate ${app.candidate?._id}:`, err.message);
+        continue;
+      }
+    }
+ 
+    await jd.save();
+ 
+    res.status(200).json({
+      message: "Resumes filtered, statuses updated, and candidates stored.",
+      savedFiltered: filteredResults.length,
+      savedUnfiltered: unfilteredResults.length,
+      shortlisted: shortlistedCount,
+      rejected: rejectedCount,
+      filtered: filteredResults,
+      unfiltered: unfilteredResults,
+      applications: jd.applications.map((a) => ({
+        candidate: a.candidate?.name,
+        email: a.candidate?.email,
+        status: a.status,
+      })),
+    });
+  } catch (error) {
+    console.error("❌ Error in filterAndUpdateJD:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
 
 export const uploadJDPfd = async (req, res) => {
   try {
