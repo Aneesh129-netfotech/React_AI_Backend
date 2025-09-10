@@ -43,6 +43,7 @@ const resumeSchema= new mongoose.Schema({
 const jdSchema = new mongoose.Schema({
     recruiter: {type: mongoose.Schema.Types.ObjectId, ref: 'Recruiter',required: true},
     title: String,
+    company:String,
     experience : String,
     skills: [String],
     location: String,

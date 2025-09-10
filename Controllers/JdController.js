@@ -154,6 +154,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 export const generateJD = async (req, res) => {
   const {
     title,
+    company,
     experience,
     skills,
     location,
@@ -173,6 +174,7 @@ export const generateJD = async (req, res) => {
   const jdPrompt = `
 Write a professional job description using the following:
 - Job Title: ${title}
+- company: ${company}
 - Required Experience: ${experience} years
 - Skills: ${skills.join(", ")}
 - Location: ${location}
@@ -214,6 +216,7 @@ Only return the summary — no heading or bullet points.
     const newJD = await JD.create({
       recruiter: req.user._id,
       title,
+      company,
       experience,
       skills,
       location,
