@@ -10,9 +10,13 @@ import { application } from "express";
 // mport { cloudinary } from "../../config/cloudinary.js";
 
 
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' })
-};
+const generateToken = (candidate) => {
+  return jwt.sign(
+    { id: candidate._id, email: candidate.email }, 
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+}
 
 export const registerCandidate = async (req, res) => {
     const { name, email, password, number, linkedInProfile } = req.body;
@@ -72,7 +76,7 @@ export const loginCandidate = async (req, res) => {
             number: candidate.number,
             linkedInProfile: candidate.linkedInProfile,
             hasAdditionalDetails: !! additionalDetails,
-            token: generateToken(candidate._id)
+            token: generateToken(candidate),
         });
     }
     catch (error) {
