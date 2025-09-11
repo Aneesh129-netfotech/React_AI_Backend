@@ -188,9 +188,12 @@ Include:
 3. Required Skills
 4. Preferred Skills
 5. Perks & Benefits
-6. How to Apply (Email: ${recruiterEmail})
- 
-Use markdown formatting and bullet points .
+6. How to Apply: [Click here to apply]-> (http://localhost:5173/CandidateRegister)
+
+Do not include recruiter email in the JD.
+Always add this URL at the end of JD: http://localhost:5173/CandidateRegister
+
+Use markdown formatting and bullet points.
 `;
 
   const summaryPrompt = `
