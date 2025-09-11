@@ -304,32 +304,32 @@ export const getAllCandidatesdataAccordingToJD = async(req,res) => {
     }
 };
 
-export const getAllAppliedJobs = async(req,res) => {
-    try {
-        const candidateId = req.user._id;
-        const jobs = await JD.find({"applications.candidate": candidateId})
-        const specificItems = jobs.map(job => {
-            const application = job.applications.find(app => app.candidate.toString() === candidateId.toString());
-            return {
-                jobId: job._id,
-                recruiter:job.recruiter,
-                title: job.title,
-                experience:job.experience,
-                skills: job.skills,
-                qualification:job.Qualification,
-                empType:job.employmentType,
-                location: job.location,
-                salary: job.salaryRange,
-                fullJD:job.fullJD,
-                jobSummary:job.jobSummary
-            };
-        });
-        res.status(200).json({message:"Applied Jobs fetched successfully", specificItems});
-    } catch (error) {
-        console.error("Error fetching applied jobs:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
+// export const getAllAppliedJobs = async(req,res) => {
+//     try {
+//         const candidateId = req.user._id;
+//         const jobs = await JD.find({"applications.candidate": candidateId})
+//         const specificItems = jobs.map(job => {
+//             const application = job.applications.find(app => app.candidate.toString() === candidateId.toString());
+//             return {
+//                 jobId: job._id,
+//                 recruiter:job.recruiter,
+//                 title: job.title,
+//                 experience:job.experience,
+//                 skills: job.skills,
+//                 qualification:job.Qualification,
+//                 empType:job.employmentType,
+//                 location: job.location,
+//                 salary: job.salaryRange,
+//                 fullJD:job.fullJD,
+//                 jobSummary:job.jobSummary
+//             };
+//         });
+//         res.status(200).json({message:"Applied Jobs fetched successfully", specificItems});
+//     } catch (error) {
+//         console.error("Error fetching applied jobs:", error);
+//         res.status(500).json({ message: "Internal server error" });
+//     }
+// };
 
 export const updateCandidateAdditionalDetails = async(req,res) => {
     try {
@@ -350,6 +350,70 @@ export const updateCandidateAdditionalDetails = async(req,res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+export const getAllAppliedJobs = async (req, res) => {
+    try {
+        const candidateId = req.user._id;
+
+        // Step 1: Fetch candidate email (required to match resumes)
+        const candidate = await CandidateRegister.findById(candidateId);
+        if (!candidate) {
+            return res.status(404).json({ message: "Candidate not found" });
+        }
+
+        const candidateEmail = candidate.email?.toLowerCase();
+
+        // Step 2: Fetch jobs where this candidate has applied
+        const jobs = await JD.find({ "applications.candidate": candidateId });
+
+        // Step 3: Build response array
+        const specificItems = jobs.map(job => {
+            // Find the application object
+            const application = job.applications.find(app =>
+                app.candidate.toString() === candidateId.toString()
+            );
+
+            // Match resume by email in filteredResumes or unfilteredResumes
+            const filteredResume = job.filteredResumes.find(
+                resume => resume.email?.toLowerCase() === candidateEmail
+            );
+            const unfilteredResume = job.unfilteredResumes.find(
+                resume => resume.email?.toLowerCase() === candidateEmail
+            );
+
+            const matchedResume = filteredResume || unfilteredResume;
+
+            return {
+                jobId: job._id,
+                recruiter: job.recruiter,
+                title: job.title,
+                company: job.company,
+                experience: job.experience,
+                skills: job.skills,
+                qualification: job.Qualification,
+                empType: job.employmentType,
+                location: job.location,
+                salary: job.salaryRange,
+                jobSummary: job.jobSummary,
+                matchSummary: matchedResume?.matchSummary || null,
+                matchPercentage: matchedResume?.matchPercentage || null,
+                resumeMatch: matchedResume?.resumeMatch || null,
+                appliedAt: application?.appliedAt || null,
+                status: application?.status || "pending"
+            };
+        });
+
+        res.status(200).json({
+            message: "Applied Jobs fetched successfully",
+            specificItems
+        });
+
+    } catch (error) {
+        console.error("Error fetching applied jobs:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 
 export const updateCandidateBasicDetails = async(req,res) => {
     try {
