@@ -304,32 +304,7 @@ export const getAllCandidatesdataAccordingToJD = async(req,res) => {
     }
 };
 
-// export const getAllAppliedJobs = async(req,res) => {
-//     try {
-//         const candidateId = req.user._id;
-//         const jobs = await JD.find({"applications.candidate": candidateId})
-//         const specificItems = jobs.map(job => {
-//             const application = job.applications.find(app => app.candidate.toString() === candidateId.toString());
-//             return {
-//                 jobId: job._id,
-//                 recruiter:job.recruiter,
-//                 title: job.title,
-//                 experience:job.experience,
-//                 skills: job.skills,
-//                 qualification:job.Qualification,
-//                 empType:job.employmentType,
-//                 location: job.location,
-//                 salary: job.salaryRange,
-//                 fullJD:job.fullJD,
-//                 jobSummary:job.jobSummary
-//             };
-//         });
-//         res.status(200).json({message:"Applied Jobs fetched successfully", specificItems});
-//     } catch (error) {
-//         console.error("Error fetching applied jobs:", error);
-//         res.status(500).json({ message: "Internal server error" });
-//     }
-// };
+
 
 export const updateCandidateAdditionalDetails = async(req,res) => {
     try {

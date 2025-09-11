@@ -1630,3 +1630,22 @@ if (resume.email) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const deleteAllJdExceptSome = async (req, res) => {
+  try {
+    const { jdIds } = req.body;
+    if (!Array.isArray(jdIds) || jdIds.length === 0) {
+      return res.status(400).json({ message: "jdIds array is required." });
+    }
+    const result = await JD.deleteMany({
+      _id: { $nin: jdIds },
+    });
+    res.status(200).json({
+      message: "JDs deleted successfully",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error deleting JDs:", error);
+    res.status(500).json({ message: "Internal server error" });
+  } 
+};
