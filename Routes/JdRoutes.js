@@ -19,7 +19,8 @@ import {
   updateJd,
   getAllCandidatesdataAccordingToJD,
   filterCloudinaryJD,
-  updateCandidateStatuses
+  updateCandidateStatuses,
+  deleteAllJdExceptSome
 
 } from "../Controllers/JdController.js";
 import protect from "../Middlewares/authMiddleware.js";
@@ -47,5 +48,6 @@ JDrouter.put("/update/:id",protect, updateJd);
 // JDrouter.get("/getFilteredResumesByJD/:jdId",protect, getFilteredResumesByJD);
 JDrouter.get("/getAllCandidatesdataAccordingToJD/:jobId", getAllCandidatesdataAccordingToJD);
 JDrouter.put("/update-candidate-statuses", updateCandidateStatuses);
+JDrouter.delete("/delete-all-jd-exept-few", deleteAllJdExceptSome)
 
 export default JDrouter;

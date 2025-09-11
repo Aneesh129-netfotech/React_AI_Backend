@@ -321,7 +321,10 @@ export const getAllAppliedJobs = async(req,res) => {
                 location: job.location,
                 salary: job.salaryRange,
                 fullJD:job.fullJD,
-                jobSummary:job.jobSummary
+                jobSummary:job.jobSummary,
+                status: application ? application.status : "Not Applied",
+                appliedAt: application ? application.appliedAt : null,
+                resume: application ? application.resume : null,
             };
         });
         res.status(200).json({message:"Applied Jobs fetched successfully", specificItems});
