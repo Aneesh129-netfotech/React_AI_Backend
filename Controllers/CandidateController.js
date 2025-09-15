@@ -10,9 +10,13 @@ import { application } from "express";
 // mport { cloudinary } from "../../config/cloudinary.js";
 
 
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' })
-};
+const generateToken = (candidate) => {
+  return jwt.sign(
+    { id: candidate._id, email: candidate.email }, 
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+}
 
 export const registerCandidate = async (req, res) => {
     const { name, email, password, number, linkedInProfile } = req.body;
@@ -72,7 +76,7 @@ export const loginCandidate = async (req, res) => {
             number: candidate.number,
             linkedInProfile: candidate.linkedInProfile,
             hasAdditionalDetails: !! additionalDetails,
-            token: generateToken(candidate._id)
+            token: generateToken(candidate),
         });
     }
     catch (error) {
@@ -83,41 +87,46 @@ export const loginCandidate = async (req, res) => {
 
 
 export const addCandidateDetails = async(req,res) => {
-try {
-    const {candidateId, skills, currentCTC, expectedCTC, currentLocation, relocation, noticePeriod} = req.body;
+    try {
+        const candidateId = req.user.id; 
+        const { skills, currentCTC, expectedCTC, currentLocation, relocation, noticePeriod } = req.body;
 
-    const existingDetails = await CandidateAddition.findOne({candidateId});
-    if(existingDetails){
-        return res.status(400).json({message:"Additional details already exist for this candidate"});
+        const existingDetails = await CandidateAddition.findOne({ candidateId });
+        if(existingDetails){
+            return res.status(400).json({ message: "Additional details already exist for this candidate" });
+        }
+
+        const candidateAddition = new CandidateAddition({
+            candidateId,
+            skills,
+            currentCTC,
+            expectedCTC,
+            currentLocation,
+            relocation,
+            noticePeriod,
+        });
+
+        await candidateAddition.save();
+        await CandidateRegister.findByIdAndUpdate(candidateId, { candidateAdditiondetails: candidateAddition._id });
+
+        res.status(201).json({ message: "Candidate Additional Details Saved Successfully", data: candidateAddition });
+    } catch (error) {
+        res.status(500).json({ message: "Error saving additional details", error: error.message });
     }
-    const candidateAddition = new CandidateAddition({
-        candidateId,
-        skills,
-        currentCTC,
-        expectedCTC,
-        currentLocation,
-        relocation,
-        noticePeriod,
-    });
-    await candidateAddition.save();
-    await CandidateRegister.findByIdAndUpdate(candidateId,{candidateAdditiondetails:candidateAddition._id});
-    res.status(201).json({message:"Candidate Additional Details Saved Successsfully",data: candidateAddition});
-} catch (error) {
-    res.status(500).json({message:"Error saving additional details",error:error.message});
-}
 };
+
 
 
 export const getCandidateProfile = async(req,res) => {
     try {
-        const {candidateId} = req.params;
+        const candidateId = req.user._id;
         const candidate = await CandidateRegister.findById(candidateId)
         .select("-password")
         .populate("candidateAdditiondetails");
 
-        if(!candidate){
-            return res.status(404).json({message:"candidate Not Found"});
-        }
+        // if(!candidate){
+        //     return res.status(404).json({message:"candidate Not Found"});
+        // }
         res.status(200).json({
             message:"candidate profile fetched successfully",candidate,
         });
@@ -295,27 +304,85 @@ export const getAllCandidatesdataAccordingToJD = async(req,res) => {
     }
 };
 
-export const getAllAppliedJobs = async(req,res) => {
+
+
+export const updateCandidateAdditionalDetails = async(req,res) => {
+    try {
+        const {candidateId} = req.params;
+        const {skills, currentCTC, expectedCTC, currentLocation, relocation, noticePeriod} = req.body;
+        const additionalDetails = await CandidateAddition.findOneAndUpdate(
+            {candidateId},
+            {skills, currentCTC, expectedCTC, currentLocation, relocation, noticePeriod},
+            {new: true, upsert: true}
+        );
+
+        res.status(200).json({
+            message: "Candidate additional details updated successfully.",
+            additionalDetails
+        });
+    } catch (error) {
+        console.error("Error updating candidate additional details:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const getAllAppliedJobs = async (req, res) => {
     try {
         const candidateId = req.user._id;
-        const jobs = await JD.find({"applications.candidate": candidateId})
+
+        // Step 1: Fetch candidate email (required to match resumes)
+        const candidate = await CandidateRegister.findById(candidateId);
+        if (!candidate) {
+            return res.status(404).json({ message: "Candidate not found" });
+        }
+
+        const candidateEmail = candidate.email?.toLowerCase();
+
+        // Step 2: Fetch jobs where this candidate has applied
+        const jobs = await JD.find({ "applications.candidate": candidateId });
+
+        // Step 3: Build response array
         const specificItems = jobs.map(job => {
-            const application = job.applications.find(app => app.candidate.toString() === candidateId.toString());
+            // Find the application object
+            const application = job.applications.find(app =>
+                app.candidate.toString() === candidateId.toString()
+            );
+
+            // Match resume by email in filteredResumes or unfilteredResumes
+            const filteredResume = job.filteredResumes.find(
+                resume => resume.email?.toLowerCase() === candidateEmail
+            );
+            const unfilteredResume = job.unfilteredResumes.find(
+                resume => resume.email?.toLowerCase() === candidateEmail
+            );
+
+            const matchedResume = filteredResume || unfilteredResume;
+
             return {
                 jobId: job._id,
-                recruiter:job.recruiter,
+                recruiter: job.recruiter,
                 title: job.title,
-                experience:job.experience,
+                company: job.company,
+                experience: job.experience,
                 skills: job.skills,
-                qualification:job.Qualification,
-                empType:job.employmentType,
+                qualification: job.Qualification,
+                empType: job.employmentType,
                 location: job.location,
                 salary: job.salaryRange,
-                fullJD:job.fullJD,
-                jobSummary:job.jobSummary
+                jobSummary: job.jobSummary,
+                matchSummary: matchedResume?.matchSummary || null,
+                matchPercentage: matchedResume?.matchPercentage || null,
+                resumeMatch: matchedResume?.resumeMatch || null,
+                appliedAt: application?.appliedAt || null,
+                status: application?.status || "pending"
             };
         });
-        res.status(200).json({message:"Applied Jobs fetched successfully", specificItems});
+
+        res.status(200).json({
+            message: "Applied Jobs fetched successfully",
+            specificItems
+        });
+
     } catch (error) {
         console.error("Error fetching applied jobs:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -323,3 +390,43 @@ export const getAllAppliedJobs = async(req,res) => {
 };
 
 
+export const updateCandidateBasicDetails = async(req,res) => {
+    try {
+        const {candidateId} = req.params;
+        const {name, email, number, linkedInProfile} = req.body;
+        const candidate = await CandidateRegister.findByIdAndUpdate(
+            candidateId,
+            {name, email, number, linkedInProfile},
+            {new: true}
+        ).select("-password");
+        if(!candidate){
+            return res.status(404).json({message:"Candidate Not Found"});
+        }
+        res.status(200).json({
+            message: "Candidate basic details updated successfully.",
+            candidate
+        });
+    } catch (error) {
+        console.error("Error updating candidate basic details:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const getCandidateAdditionalDetails = async(req,res) => {
+    try {
+        const {candidateId} = req.params;
+        const additionalDetails = await CandidateAddition.findOne({candidateId});
+
+        if (!additionalDetails) {
+            return res.status(404).json({ message: "Additional details not found" });
+        }
+
+        res.status(200).json({
+            message: "Candidate additional details fetched successfully.",
+            additionalDetails
+        });
+    } catch (error) {
+        console.error("Error fetching candidate additional details:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
